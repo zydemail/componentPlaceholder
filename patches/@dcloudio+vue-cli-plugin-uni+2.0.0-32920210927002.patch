@@ -1,0 +1,17 @@
+diff --git a/node_modules/@dcloudio/vue-cli-plugin-uni/lib/split-chunks.js b/node_modules/@dcloudio/vue-cli-plugin-uni/lib/split-chunks.js
+index d9b915f..5e5ee89 100644
+--- a/node_modules/@dcloudio/vue-cli-plugin-uni/lib/split-chunks.js
++++ b/node_modules/@dcloudio/vue-cli-plugin-uni/lib/split-chunks.js
+@@ -180,8 +180,10 @@ module.exports = function getSplitChunks () {
+               }
+               return true
+             }
+-          } else {
+-            return hasMainPackageComponent(m.module, subPackageRoot)
++          } else if (m.dependency && m.dependency.getReference()) {
++            if (hasMainPackageComponent(m.module, subPackageRoot)) {
++              return true
++            }
+           }
+         }
+       }

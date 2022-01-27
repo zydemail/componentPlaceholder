@@ -1,0 +1,50 @@
+{
+	"pages": [
+		{
+			"path": "pages/index",
+			"style": {
+				"navigationStyle": "default",
+				"navigationBarTitleText": "UNIAPP分包优化测试",
+				"backgroundColor": "#ffffff",
+				"navigationBarTextStyle": "black"
+			}
+		}
+	],
+	"subPackages": [
+		{
+			"root": "packages/helloworld",
+			"pages": [
+				{
+					"path": "pages/index"
+				}
+			]
+		},
+		{
+			"root": "components",
+			"pages": [
+				{
+					"path": "index"
+				}
+			]
+		}
+	],
+	"preloadRule": {
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "UNIAPP分包优化测试",
+		"mp-weixin": { 
+			"navigationBarBackgroundColor": "#F8F8F8"
+		},
+		"h5": { 
+			"navigationBarBackgroundColor": "#F8F8F8"
+		},
+		"mp-alipay": {
+			"allowsBounceVertical": "NO"
+		},
+		"backgroundTextStyle": "dark",
+		"backgroundColor": "#F8F8F8",
+		"usingComponents": {
+		}
+	}
+}

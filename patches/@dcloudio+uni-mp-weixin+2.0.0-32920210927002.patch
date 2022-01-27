@@ -1,0 +1,26 @@
+diff --git a/node_modules/@dcloudio/uni-mp-weixin/dist/index.js b/node_modules/@dcloudio/uni-mp-weixin/dist/index.js
+index fe78e3b..246c326 100644
+--- a/node_modules/@dcloudio/uni-mp-weixin/dist/index.js
++++ b/node_modules/@dcloudio/uni-mp-weixin/dist/index.js
+@@ -1795,8 +1795,19 @@ function parseBaseComponent (vueComponentOptions, {
+     }
+   };
+   // externalClasses
+-  if (vueOptions.externalClasses) {
+-    componentOptions.externalClasses = vueOptions.externalClasses;
++  const externalClasses = new Set()
++  let p = VueComponent
++  do {
++    const ex = p.options.externalClasses
++    if (Array.isArray(ex)) {
++      ex.forEach(c => externalClasses.add(c))
++    } else if (typeof cs === 'string') {
++      externalClasses.add(ex)
++    }
++    p = p.super
++  } while (p)
++  if (externalClasses.size > 0) {
++    componentOptions.externalClasses = Array.from(externalClasses)
+   }
+ 
+   if (Array.isArray(vueOptions.wxsCallMethods)) {

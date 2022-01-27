@@ -1,0 +1,123 @@
+diff --git a/node_modules/@dcloudio/webpack-uni-mp-loader/lib/babel/scoped-component-traverse.js b/node_modules/@dcloudio/webpack-uni-mp-loader/lib/babel/scoped-component-traverse.js
+index 5ec6b13..5e3ee90 100644
+--- a/node_modules/@dcloudio/webpack-uni-mp-loader/lib/babel/scoped-component-traverse.js
++++ b/node_modules/@dcloudio/webpack-uni-mp-loader/lib/babel/scoped-component-traverse.js
+@@ -51,6 +51,43 @@ function handleObjectExpression (declaration, path, state) {
+   if (componentsProperty && t.isObjectExpression(componentsProperty.value)) {
+     handleComponentsObjectExpression(componentsProperty.value, path, state)
+   }
++
++  // componentPlaceholder
++  const componentPlaceholder = declaration.properties.filter(prop => {
++    return t.isObjectProperty(prop) && t.isIdentifier(prop.key) &&
++      prop.key.name === 'componentPlaceholder'
++  })[0]
++
++  if (componentPlaceholder && t.isObjectExpression(componentPlaceholder.value)) {
++    handleComponentPlaceholderObjectExpression(componentPlaceholder.value, path, state)
++    // remove componentPlaceholder
++    declaration.properties = declaration.properties.filter(prop => {
++      return prop !== componentPlaceholder
++    })
++  }
++}
++
++function handleComponentPlaceholderObjectExpression (componentPlaceholderObjExpr, path, state) {
++  const properties = componentPlaceholderObjExpr.properties
++    .filter(prop => t.isObjectProperty(prop) &&
++      (t.isStringLiteral(prop.value) || t.isIdentifier(prop.value)))
++
++  const placeholders = []
++
++  properties.forEach(prop => {
++    // prop.key maybe Identifier or StringLiteral
++    // Identifier use name, StringLiteral use value
++    const key = prop.key.name || prop.key.value
++    let value = null
++    if (t.isIdentifier(prop.value)) {
++      value = prop.value.name
++    } else {
++      value = prop.value.value
++    }
++
++    placeholders.push({ name: key, value })
++  })
++  state.componentPlaceholders = (state.componentPlaceholders || []).concat(placeholders)
+ }
+ 
+ function handleComponentsObjectExpression (componentsObjExpr, path, state, prepend) {
+@@ -105,6 +142,7 @@ function handleIdentifier ({
+ module.exports = function (ast, state = {
+   type: 'Component',
+   components: [],
++  componentPlaceholders: [],
+   options: {}
+ }) {
+   babelTraverse(ast, {
+diff --git a/node_modules/@dcloudio/webpack-uni-mp-loader/lib/script-new.js b/node_modules/@dcloudio/webpack-uni-mp-loader/lib/script-new.js
+index adfe749..99919de 100644
+--- a/node_modules/@dcloudio/webpack-uni-mp-loader/lib/script-new.js
++++ b/node_modules/@dcloudio/webpack-uni-mp-loader/lib/script-new.js
+@@ -1,6 +1,7 @@
+ const path = require('path')
+ 
+ const parser = require('@babel/parser')
++const babelGenerate = require('@babel/generator').default
+ 
+ const {
+   removeExt,
+@@ -15,11 +16,13 @@ const {
+ } = require('@dcloudio/uni-cli-shared/lib/platform')
+ 
+ const {
++  getAutoComponents,
+   isBuiltInComponentPath
+ } = require('@dcloudio/uni-cli-shared/lib/pages')
+ 
+ const {
+-  updateUsingComponents
++  updateUsingComponents,
++  updateComponentPlaceholder
+ } = require('@dcloudio/uni-cli-shared/lib/cache')
+ 
+ const preprocessor = require('@dcloudio/vue-cli-plugin-uni/packages/webpack-preprocess-loader/preprocess')
+@@ -77,15 +80,44 @@ module.exports = function (content, map) {
+     type = 'Component'
+   }
+ 
+-  const {
++  let {
++    ast,
+     state: {
+-      components
++      components,
++      componentPlaceholders
+     }
+   } = traverse(parser.parse(content, getBabelParserOptions()), {
+     type,
+-    components: []
++    components: [],
++    componentPlaceholders: []
+   })
+ 
++  if (componentPlaceholders.length) {
++    // generate js code after remove componentPlaceholder
++    // updateComponentPlaceholder and add easycom's component
++    const componentPlaceholder = Object.create(null)
++    componentPlaceholders.forEach(c => {
++      c.name = getComponentName(hyphenate(c.name))
++      c.value = getComponentName(hyphenate(c.value))
++      componentPlaceholder[c.name] = c.value
++    })
++    updateComponentPlaceholder(resourcePath, componentPlaceholder)
++    // auto components
++    const imported = new Set()
++    components.forEach(c => imported.add(getComponentName(hyphenate(c.name))))
++    const cs = getAutoComponents(componentPlaceholders.map(p => p.value)
++      .filter(p => !imported.has(p))).map(c => { return { name: c.name, source: c.source } })
++    components = (components || []).concat(cs)
++  }
++
+   const callback = this.async()
+ 
+   if (!components.length) {

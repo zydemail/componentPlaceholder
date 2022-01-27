@@ -1,0 +1,15 @@
+diff --git a/node_modules/@dcloudio/types/uni-app/cloud.d.ts b/node_modules/@dcloudio/types/uni-app/cloud.d.ts
+index bc289ca..1a2d1ce 100644
+--- a/node_modules/@dcloudio/types/uni-app/cloud.d.ts
++++ b/node_modules/@dcloudio/types/uni-app/cloud.d.ts
+@@ -2573,8 +2573,8 @@ declare namespace UniCloud {
+          * 文档: [http://uniapp.dcloud.io/uniCloud/clientdb?id=refreshtoken](http://uniapp.dcloud.io/uniCloud/clientdb?id=refreshtoken)
+          */
+         on(eventName: string, callbaack: (result: any) => void): any;
+-        addInterceptor(apiName: string, interceptor: (result: any) => void);
+-        removeInterceptor(apiName: string, interceptor?: (result: any) => void);
++        addInterceptor(apiName: string, interceptor: (result: any) => void): any;
++        removeInterceptor(apiName: string, interceptor?: (result: any) => void): any;
+     }
+ 
+     interface InterceptorMap {
